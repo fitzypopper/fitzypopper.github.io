@@ -124,9 +124,35 @@ function initScrollNav() {
   });
 }
 
+// ======================== SKILL BARS ========================
+function initSkillBars() {
+  const fills = document.querySelectorAll('.skill-fill');
+  fills.forEach((el) => {
+    el.style.setProperty('--level', el.dataset.level);
+  });
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const bars = entry.target.querySelectorAll('.skill-fill');
+          bars.forEach((bar, i) => {
+            setTimeout(() => bar.classList.add('animated'), i * 80);
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.2 }
+  );
+
+  document.querySelectorAll('.skill-category').forEach((cat) => observer.observe(cat));
+}
+
 // ======================== INIT ========================
 document.addEventListener('DOMContentLoaded', () => {
   initNav();
   initScrollNav();
+  initSkillBars();
   fetchRepos();
 });
