@@ -35,6 +35,14 @@ function getColor(lang) {
   return LANG_COLORS[lang] || '#8b949e';
 }
 
+function getPagesUrl(repo) {
+  if (!repo.has_pages) return null;
+  if (repo.homepage && !repo.homepage.endsWith('.git')) return repo.homepage;
+  const owner = repo.owner.login;
+  const base = `https://${owner}.github.io`;
+  return repo.name === `${owner}.github.io` ? `${base}/` : `${base}/${repo.name}/`;
+}
+
 // ======================== FETCH REPOS ========================
 async function fetchRepos() {
   const grid = document.getElementById('projects-grid');
@@ -79,6 +87,11 @@ async function fetchRepos() {
           ${
             repo.language
               ? `<span><span class="project-lang-dot" style="background:${getColor(repo.language)}"></span>${repo.language}</span>`
+              : ''
+          }
+          ${
+            getPagesUrl(repo)
+              ? `<span class="project-pages"><a href="${getPagesUrl(repo)}" target="_blank" rel="noopener">&#128279; Live</a></span>`
               : ''
           }
           <span>&#9733; ${repo.stargazers_count}</span>

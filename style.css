@@ -391,6 +391,15 @@ section {
   display: inline-block;
 }
 
+.project-pages a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.project-pages a:hover {
+  text-decoration: underline;
+}
+
 .loading-spinner {
   grid-column: 1 / -1;
   text-align: center;
