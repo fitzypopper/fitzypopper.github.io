@@ -400,6 +400,49 @@ section {
   text-decoration: underline;
 }
 
+/* ======================== REPO WEB ======================== */
+#web-graph {
+  width: 100%;
+  height: 520px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+}
+#web-graph:active {
+  cursor: grabbing;
+}
+.web-tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  max-width: 280px;
+}
+.web-tooltip small {
+  color: var(--text-secondary);
+}
+.tooltip-lang,
+.tooltip-live {
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--border);
+  margin-left: 4px;
+}
+.tooltip-live {
+  background: var(--accent-dim);
+  color: #fff;
+}
+
 .loading-spinner {
   grid-column: 1 / -1;
   text-align: center;

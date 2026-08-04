@@ -98,6 +98,7 @@ async function fetchRepos() {
       `;
       grid.appendChild(card);
     });
+    initRepoWeb(visible);
   } catch (err) {
     grid.innerHTML = `<p class="loading-spinner">Failed to load repos. <a href="https://github.com/${GITHUB_USER}" target="_blank">View on GitHub</a></p>`;
     console.error(err);
@@ -158,6 +159,154 @@ function initSkillBars() {
   );
 
   document.querySelectorAll('.skill-category').forEach((cat) => observer.observe(cat));
+}
+
+// ======================== REPO WEB ========================
+function initRepoWeb(repos) {
+  const container = document.getElementById('web-graph');
+  if (!container || typeof d3 === 'undefined') return;
+
+  container.innerHTML = '';
+
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  const nodes = [
+    {
+      id: 'center',
+      name: 'fitzypopper',
+      url: 'https://github.com/fitzypopper',
+      lang: null,
+      isCenter: true,
+      desc: 'Portfolio & GitHub root',
+    },
+  ];
+  repos.forEach((repo) => {
+    nodes.push({
+      id: repo.full_name,
+      name: repo.name,
+      url: getPagesUrl(repo) || repo.html_url,
+      lang: repo.language,
+      hasPages: !!getPagesUrl(repo),
+      desc: repo.description || '',
+      stars: repo.stargazers_count,
+    });
+  });
+
+  const links = nodes
+    .filter((n) => !n.isCenter)
+    .map((n) => ({ source: 'center', target: n.id }));
+
+  const svg = d3
+    .select(container)
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height)
+    .attr('viewBox', [0, 0, width, height]);
+
+  const g = svg.append('g');
+
+  const link = g
+    .append('g')
+    .selectAll('line')
+    .data(links)
+    .join('line')
+    .attr('stroke', '#30363d')
+    .attr('stroke-opacity', 0.7);
+
+  const node = g
+    .append('g')
+    .selectAll('circle')
+    .data(nodes)
+    .join('circle')
+    .attr('r', (n) => (n.isCenter ? 18 : 9 + Math.min(8, Math.log2(1 + n.stars))))
+    .attr('fill', (n) => (n.isCenter ? '#7ee787' : getColor(n.lang)))
+    .attr('stroke', '#0d1117')
+    .attr('stroke-width', 2)
+    .style('cursor', 'pointer');
+
+  const labels = g
+    .append('g')
+    .selectAll('text')
+    .data(nodes)
+    .join('text')
+    .text((n) => n.name)
+    .attr('fill', '#8b949e')
+    .attr('font-size', '11px')
+    .attr('text-anchor', 'middle')
+    .style('pointer-events', 'none');
+
+  const tooltip = d3
+    .select(container)
+    .append('div')
+    .attr('class', 'web-tooltip')
+    .style('opacity', 0);
+
+  const simulation = d3
+    .forceSimulation(nodes)
+    .force(
+      'link',
+      d3.forceLink(links).id((d) => d.id).distance(120).strength(0.35)
+    )
+    .force('charge', d3.forceManyBody().strength(-380))
+    .force('collide', d3.forceCollide().radius(26))
+    .force('x', d3.forceX(width / 2).strength(0.08))
+    .force('y', d3.forceY(height / 2).strength(0.08));
+
+  simulation.on('tick', () => {
+    link
+      .attr('x1', (d) => d.source.x)
+      .attr('y1', (d) => d.source.y)
+      .attr('x2', (d) => d.target.x)
+      .attr('y2', (d) => d.target.y);
+    node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
+    labels
+      .attr('x', (d) => d.x)
+      .attr('y', (d) => d.y + (d.isCenter ? 32 : 17));
+  });
+
+  node
+    .on('mouseover', (event, d) => {
+      tooltip
+        .html(
+          `<strong>${d.name}</strong>` +
+            (d.lang ? ` <span class="tooltip-lang">${d.lang}</span>` : '') +
+            (d.hasPages ? ' <span class="tooltip-live">Live</span>' : '') +
+            `<br/><small>${d.desc || d.url}</small>`
+        )
+        .style('left', event.pageX + 12 + 'px')
+        .style('top', event.pageY - 30 + 'px')
+        .style('opacity', 1);
+    })
+    .on('mouseout', () => tooltip.style('opacity', 0))
+    .on('click', (event, d) => window.open(d.url, '_blank'));
+
+  node.call(
+    d3
+      .drag()
+      .on('start', (event, d) => {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.sourceEvent.stopPropagation();
+        d.fx = d.x;
+        d.fy = d.y;
+      })
+      .on('drag', (event, d) => {
+        d.fx = event.x;
+        d.fy = event.y;
+      })
+      .on('end', (event, d) => {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      })
+  );
+
+  svg.call(
+    d3
+      .zoom()
+      .scaleExtent([0.5, 3])
+      .on('zoom', (event) => g.attr('transform', event.transform))
+  );
 }
 
 // ======================== INIT ========================
