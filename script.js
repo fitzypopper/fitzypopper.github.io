@@ -37,10 +37,8 @@ function getColor(lang) {
 
 function getPagesUrl(repo) {
   if (!repo.has_pages) return null;
-  if (repo.homepage && !repo.homepage.endsWith('.git')) return repo.homepage;
-  const owner = repo.owner.login;
-  const base = `https://${owner}.github.io`;
-  return repo.name === `${owner}.github.io` ? `${base}/` : `${base}/${repo.name}/`;
+  const base = 'https://fitzypopper.dpdns.org';
+  return repo.name === 'fitzypopper.github.io' ? `${base}/` : `${base}/${repo.name}/`;
 }
 
 // ======================== FETCH REPOS ========================
