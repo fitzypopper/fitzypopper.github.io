@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://fitzypopper.dpdns.org/sitemap.xml
