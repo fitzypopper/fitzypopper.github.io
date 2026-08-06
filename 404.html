@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - fitzypopper</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --text: #e6edf3;
+      --accent: #7ee787;
+      --border: #30363d;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      overflow: hidden;
+    }
+    .container { padding: 40px; }
+    .code {
+      font-size: clamp(6rem, 15vw, 12rem);
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      animation: glitch 3s infinite;
+    }
+    .msg {
+      font-size: 1.3rem;
+      color: #8b949e;
+      margin: 24px 0 40px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 600;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(126, 231, 135, 0.3);
+    }
+    @keyframes glitch {
+      0%, 90%, 100% { transform: none; }
+      92% { transform: translate(-4px, 2px) skewX(-2deg); }
+      94% { transform: translate(4px, -2px) skewX(2deg); }
+      96% { transform: translate(-2px, -1px); }
+      98% { transform: translate(2px, 1px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="code">404</div>
+    <p class="msg">This page doesn't exist. Yet. Maybe it's a secret project.</p>
+    <a href="/" class="btn">Go Home</a>
+  </div>
+  </div>
+</body>
+</html>
