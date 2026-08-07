@@ -479,52 +479,68 @@ async function fetchBlog() {
     const cacheKey = 'blog_posts';
     let posts = cacheGet(cacheKey);
     if (!posts) {
-      const res = await fetch(
-        `https://api.github.com/repos/${GITHUB_USER}/blog/contents/_posts`
-      );
-      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-      const files = await res.json();
-      posts = files
-        .filter((f) => f.name.endsWith('.md') || f.name.endsWith('.markdown'))
-        .sort((a, b) => b.name.localeCompare(a.name))
-        .slice(0, 3);
-      cacheSet(cacheKey, posts);
+      // Try RSS feed first (no rate limit)
+      const feedRes = await fetch('https://fitzypopper.dpdns.org/blog/feed.xml');
+      if (feedRes.ok) {
+        const text = await feedRes.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/xml');
+        const items = doc.querySelectorAll('item');
+        posts = Array.from(items).slice(0, 3).map((item) => ({
+          title: item.querySelector('title')?.textContent || 'Untitled',
+          url: item.querySelector('link')?.textContent || '#',
+          date: new Date(item.querySelector('pubDate')?.textContent || '').toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric',
+          }),
+        }));
+        cacheSet(cacheKey, posts);
+      } else {
+        // Fallback to GitHub API
+        const res = await fetch(
+          `https://api.github.com/repos/${GITHUB_USER}/blog/contents/_posts`
+        );
+        if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+        const files = await res.json();
+        posts = files
+          .filter((f) => f.name.endsWith('.md') || f.name.endsWith('.markdown'))
+          .sort((a, b) => b.name.localeCompare(a.name))
+          .slice(0, 3)
+          .map((f) => {
+            const match = f.name.match(/^(\d{4})-(\d{2})-(\d{2})-(.+)\.(md|markdown)$/);
+            if (!match) return null;
+            const [, year, month, day, slug] = match;
+            return {
+              title: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+              url: `https://fitzypopper.dpdns.org/blog/${year}/${month}/${day}/${slug}/`,
+              date: new Date(`${year}-${month}-${day}`).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric',
+              }),
+            };
+          })
+          .filter(Boolean);
+        cacheSet(cacheKey, posts);
+      }
     }
 
-    if (posts.length === 0) {
+    if (!posts || posts.length === 0) {
       grid.innerHTML = '<p class="loading-spinner">No posts yet.</p>';
       return;
     }
 
     grid.innerHTML = '';
-    for (const post of posts) {
-      const match = post.name.match(/^(\d{4})-(\d{2})-(\d{2})-(.+)\.(md|markdown)$/);
-      if (!match) continue;
-
-      const [, year, month, day, slug] = match;
-      const date = new Date(`${year}-${month}-${day}`);
-      const dateStr = date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-
-      const title = slug
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-
+    posts.forEach((post) => {
       const card = document.createElement('a');
       card.className = 'blog-card';
-      card.href = `https://fitzypopper.dpdns.org/blog/${year}/${month}/${day}/${slug}/`;
+      card.href = post.url;
       card.target = '_blank';
       card.rel = 'noopener';
       card.innerHTML = `
-        <span class="blog-card-title">${title}</span>
-        <span class="blog-card-date">${dateStr}</span>
+        <span class="blog-card-title">${post.title}</span>
+        <span class="blog-card-date">${post.date}</span>
         <span class="blog-card-excerpt">Read post &rarr;</span>
       `;
       grid.appendChild(card);
-    }
+    });
   } catch (err) {
     grid.innerHTML = `<p class="loading-spinner">Failed to load posts. <a href="https://fitzypopper.dpdns.org/blog/" target="_blank">Visit blog</a></p>`;
     console.error(err);
